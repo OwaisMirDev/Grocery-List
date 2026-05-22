@@ -5,9 +5,10 @@ import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
 import { AddItem } from "./components/AddItem";
 import { SearchItem } from "./components/SearchItem";
+import { apiRequest } from "./apiRequest";
 
 function App() {
-  const BASE_URL = "http://localhost:3000";
+  const API_URL = "http://localhost:3000/items";
 
   const [items, setItems] = useState([]);
   const [itemValue, setItemValue] = useState("");
@@ -18,7 +19,7 @@ function App() {
   useEffect(() => {
     async function getItems() {
       try {
-        const response = await fetch(`${BASE_URL}/items`);
+        const response = await fetch(API_URL);
         if (!response.ok) throw Error("Failed to get items");
         const data = await response.json();
         setItems(data);
@@ -39,31 +40,57 @@ function App() {
     localStorage.setItem("items", JSON.stringify(items));
   }, [items]);
 
-  function deleteItem(id) {
-    const arr = items.filter((item) => item.id !== id);
-    setItems(arr);
+  async function deleteItem(id) {
+    const updatedItems = items.filter((item) => item.id !== id);
+    setItems(updatedItems);
+    const deleteOptions = {
+      method: "DELETE",
+    };
+    const reqUrl = `${API_URL}/${id}`;
+    const result = await apiRequest(reqUrl, deleteOptions);
+    if (result) setFetchError(result);
   }
-  function checkboxHandler(id) {
-    const arr = items.map((item) =>
-      item.id == id ? { ...item, isAvailable: !item.isAvailable } : item,
+
+  async function checkboxHandler(id) {
+    const updatedItems = items.map((item) =>
+      item.id === id ? { ...item, isAvailable: !item.isAvailable } : item,
     );
-    setItems(arr);
+    setItems(updatedItems);
+    const myItem = updatedItems.find((item) => item.id === id);
+
+    const updateOptions = {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ isAvailable: myItem.isAvailable }),
+    };
+    const reqUrl = `${API_URL}/${id}`;
+    const result = await apiRequest(reqUrl, updateOptions);
+    if (result) setFetchError(result);
   }
-  function handleSubmit(e) {
+
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!itemValue.trim()) return;
+    const newItem = {
+      id: items.length === 0 ? 1 : items[items.length - 1].id + 1,
+      name: itemValue,
+      isAvailable: false,
+    };
 
-    const updatedItems = [
-      ...items,
-      {
-        id: items.length === 0 ? 1 : items[items.length - 1].id + 1,
-        name: itemValue,
-        isAvailable: false,
-      },
-    ];
+    const updatedItems = [...items, newItem];
     setItems(updatedItems);
-    localStorage.setItem("items", JSON.stringify(updatedItems));
     setItemValue("");
+    const postOptions = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(newItem),
+    };
+    const result = await apiRequest(API_URL, postOptions);
+    if (result) setFetchError(result);
   }
 
   return (
