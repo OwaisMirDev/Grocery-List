@@ -64,7 +64,7 @@ footer {
   min-height: 100vh;
   gap: 5px;
 }
-ul {
+main {
   flex: 1;
 }
 p.empty-items {

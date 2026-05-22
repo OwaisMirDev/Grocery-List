@@ -1,0 +1,7 @@
+{
+  "items": [
+    { "id": 1, "name": "Apple", "isAvailable": false },
+    { "id": 2, "name": "Mango", "isAvailable": false },
+    { "id": 3, "name": "Banana", "isAvailable": false }
+  ]
+}
